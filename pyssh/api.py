@@ -113,6 +113,14 @@ ssh_channel_callbacks_struct._fields_ = [
 #the event_callback used with poll events
 event_cb = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.py_object)
 
+
+class Features(object):
+    """Not all libssh installations have all functions available. This global shows features detected or not"""
+    gssapi = True
+    server = True
+
+features = Features()
+
 try:
     lib = load_library()
     
@@ -281,12 +289,16 @@ try:
     lib.ssh_get_status.argtypes = [ctypes.c_void_p] 
     lib.ssh_get_status.restype = ctypes.c_int
     
-    lib.ssh_gssapi_get_creds.argtypes = [ctypes.c_void_p]
-    lib.ssh_gssapi_get_creds.restype = ctypes.c_void_p
+    try:
+        lib.ssh_gssapi_get_creds.argtypes = [ctypes.c_void_p]
+        lib.ssh_gssapi_get_creds.restype = ctypes.c_void_p
 
-    lib.ssh_gssapi_set_creds.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
-    lib.ssh_gssapi_set_creds.restype = None
-    
+        lib.ssh_gssapi_set_creds.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        lib.ssh_gssapi_set_creds.restype = None
+    except AttributeError:
+        # gssapi not compiled in
+        features.gssapi = False
+        
     lib.ssh_init.argtypes = [] 
     lib.ssh_init.restype = ctypes.c_int
 
@@ -834,9 +846,9 @@ try:
     lib.sftp_send_client_message.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
     lib.sftp_send_client_message.restype = ctypes.c_int
     
-except AttributeError:
+except AttributeError as error:
     lib = None
-    raise ImportError('ssh shared library not found or incompatible')
+    raise ImportError('ssh shared library not found or incompatible: ' + str(error))
 except (OSError, IOError):
     lib = None
     raise ImportError('ssh shared library not found.\n'
