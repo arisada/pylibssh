@@ -3,7 +3,7 @@
 import sys
 import os
 import io
-import pyssh
+import pylibssh
 
 ##############declaration de variables##############
 USER = "myuser"
@@ -16,15 +16,15 @@ sshbind = None
 mainloop = None
 
 #############definition des fonction #############
-class myChannelCallbacks(pyssh.ChannelCallbacks):
+class myChannelCallbacks(pylibssh.ChannelCallbacks):
     def requestPty(self, term, width, height, pxwidth, pxheight):
         print "allocated pty"
-        return pyssh.api.SSH_OK
+        return pylibssh.api.SSH_OK
     def requestShell(self):
         print "allocated shell"
-        return pyssh.api.SSH_OK
+        return pylibssh.api.SSH_OK
 
-class myServerCallbacks(pyssh.ServerCallbacks):
+class myServerCallbacks(pylibssh.ServerCallbacks):
     def __init__(self, session):
         self.session = session
     def authPassword(self, user, password):
@@ -35,35 +35,35 @@ class myServerCallbacks(pyssh.ServerCallbacks):
         if(user == USER and password == PASSWORD):
             authenticated = True
             print "Authenticated"
-            return pyssh.api.SSH_AUTH_SUCCESS
+            return pylibssh.api.SSH_AUTH_SUCCESS
         if (tries >= 3):
             print "Too many authentication tries\n"
             session.disconnect()
             error = True
-            return pyssh.api.SSH_AUTH_DENIED
-        return pyssh.api.SSH_AUTH_DENIED
+            return pylibssh.api.SSH_AUTH_DENIED
+        return pylibssh.api.SSH_AUTH_DENIED
     def authGssapiMic(self, user):
         print "Authenticating user" + user + " with gssapi"
         print "authenticated !"
         authenticated = True
-        return pyssh.api.SSH_AUTH_SUCCESS
+        return pylibssh.api.SSH_AUTH_SUCCESS
     def channelOpenSessionRequest(self):
         global channel
-        channel = pyssh.Channel(self.session)
+        channel = pylibssh.Channel(self.session)
         channel.setCallbacks(myChannelCallbacks(channel))
         return channel
   
 def setOpts(sshbind):
-    sshbind.setOption(pyssh.api.SSH_BIND_OPTIONS_BINDPORT_STR, "2222")
-    sshbind.setOption(pyssh.api.SSH_BIND_OPTIONS_DSAKEY, "sshd_dsa")
-    sshbind.setOption(pyssh.api.SSH_BIND_OPTIONS_RSAKEY, "sshd_rsa")
-    sshbind.setOption(pyssh.api.SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3")
-    sshbind.setOption(pyssh.api.SSH_BIND_OPTIONS_BINDADDR, "0.0.0.0")
+    sshbind.setOption(pylibssh.SSH_BIND_OPTIONS_BINDPORT_STR, "2222")
+    sshbind.setOption(pylibssh.SSH_BIND_OPTIONS_DSAKEY, "sshd_dsa")
+    sshbind.setOption(pylibssh.SSH_BIND_OPTIONS_RSAKEY, "sshd_rsa")
+    sshbind.setOption(pylibssh.SSH_BIND_OPTIONS_LOG_VERBOSITY_STR, "3")
+    sshbind.setOption(pylibssh.SSH_BIND_OPTIONS_BINDADDR, "0.0.0.0")
 
 def main():
 #    buffer_len = 2048
-    sshbind=pyssh.Bind()
-    session=pyssh.ServerSession()
+    sshbind=pylibssh.Bind()
+    session=pylibssh.ServerSession()
     setOpts(sshbind)
     
     sshbind.listen()
@@ -71,8 +71,8 @@ def main():
     cb = myServerCallbacks(session)
     session.setCallbacks(cb)
     session.handleKeyExchange()
-    session.setAuthMethods(pyssh.api.SSH_AUTH_METHOD_PASSWORD | pyssh.api.SSH_AUTH_METHOD_GSSAPI_MIC)
-    mainloop = pyssh.Event()
+    session.setAuthMethods(pylibssh.api.SSH_AUTH_METHOD_PASSWORD | pylibssh.api.SSH_AUTH_METHOD_GSSAPI_MIC)
+    mainloop = pylibssh.Event()
     mainloop.addSession(session)
 
     while ((not authenticated) or (channel is None)):

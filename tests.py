@@ -10,7 +10,7 @@ class PythonLibsshTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Add build directory to python path
-        cls.pyssh = importlib.import_module("pyssh")
+        cls.pylibssh = importlib.import_module("pylibssh")
 
         with io.open("/tmp/py-libssh.temp.file", "wb") as f:
             f.write(b"aaaaaaaaa\n")
@@ -22,7 +22,7 @@ class PythonLibsshTest(unittest.TestCase):
         os.remove("/tmp/py-libssh.temp.file")
 
     def test_connect_and_execute_command_01(self):
-        s = self.pyssh.connect()
+        s = self.pylibssh.connect()
         r = s.execute("uname")
         result = r.as_bytes()
         return_code = r.return_code
@@ -31,7 +31,7 @@ class PythonLibsshTest(unittest.TestCase):
         self.assertEqual(result, b"Linux\n")
 
     def test_connect_and_execute_command_02(self):
-        s = self.pyssh.connect()
+        s = self.pylibssh.connect()
         r = s.execute("uname")
         result = r.as_bytes()
 
@@ -39,7 +39,7 @@ class PythonLibsshTest(unittest.TestCase):
             result = r.as_bytes()
 
     #def test_connect_and_execute_command_02(self):
-    #    s = self.pyssh.connect()
+    #    s = self.pylibssh.connect()
     #    r = s.execute("echo $FOO", env={"FOO": "Hello"})
     #    result = r.as_bytes()
     #    self.assertEqual(result, b"Hello")
@@ -51,8 +51,8 @@ class PythonLibsshTest(unittest.TestCase):
             sha1_1.update(data)
             f.write(data)
 
-        session = self.pyssh.connect()
-        sftp = self.pyssh.Sftp(session)
+        session = self.pylibssh.connect()
+        sftp = self.pylibssh.Sftp(session)
         sftp.put("/tmp/py-libssh.temp.file.2", "/tmp/py-libssh.temp.file.3")
 
         self.assertTrue(os.path.exists("/tmp/py-libssh.temp.file.3"))
@@ -73,8 +73,8 @@ class PythonLibsshTest(unittest.TestCase):
             sha1_1.update(data)
             f.write(data)
 
-        session = self.pyssh.connect()
-        sftp = self.pyssh.Sftp(session)
+        session = self.pylibssh.connect()
+        sftp = self.pylibssh.Sftp(session)
         sftp.get("/tmp/py-libssh.temp.file.2", "/tmp/py-libssh.temp.file.3")
 
         self.assertTrue(os.path.exists("/tmp/py-libssh.temp.file.3"))
@@ -90,14 +90,16 @@ class PythonLibsshTest(unittest.TestCase):
 
 
     def test_read_remote_file(self):
-        session = self.pyssh.connect()
-        sftp = self.pyssh.Sftp(session)
+        session = self.pylibssh.connect()
+        sftp = self.pylibssh.Sftp(session)
         f = sftp.open("/tmp/py-libssh.temp.file", os.O_RDONLY)
         self.assertEqual(b"aaaaaaaaa\n", f.read(10))
 
     #def test_shell_01(self):
     #    import pdb; pdb.set_trace()
-    #    session = self.pyssh.connect()
+    #    session = self.pylibssh.connect()
     #    shell = session.shell()
     #    #x = shell.read(1024)
     #    #shell.write("echo $USER;\n")
+if __name__ == '__main__':
+    unittest.main()
